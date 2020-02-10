@@ -296,5 +296,4 @@ app.delete('/productcat/:productId', async (req, res) => {
 
 //----------------------------------------------------------------------------
 
-
 app.listen(PORT, console.log('server listen on port:', PORT))
