@@ -33,7 +33,8 @@ app.get('/', (req, res) => {
 //get all categories
 app.get('/categories', async (req, res) => {
     try {
-        const query = `SELECT * FROM category_complete`
+        const query = `SELECT a.* , b.category as parentIdName FROM categories a
+                        LEFT JOIN categories b ON a.parentId = b.id`
         let result = await connquery(query)
         res.status(200).send(result)
     } catch (error) {
@@ -57,8 +58,9 @@ app.get('/categories/verychild', async (req, res) => {
 //get category by name
 app.get('/categories/:name', async (req, res) => {
     try {
-        const query = `SELECT * FROM category_complete
-                        WHERE category = ${conn.escape(req.params.name)}`
+        const query = `SELECT a.* , b.category as parentIdName FROM categories a
+                        LEFT JOIN categories b ON a.parentId = b.id
+                        WHERE a.category = ${conn.escape(req.params.name)}`
         let result = await connquery(query)
         if (result.length === 0) {
             return res.status(404).send({ message: 'category not found' })
@@ -103,12 +105,12 @@ app.put('/categories/:id', async (req, res) => {
 //delete category and it's children
 app.delete('/categories/:id', async (req, res) => {
     try {
-        //auto with foreignkey constraint
+        //auto delete with foreignkey constraint delete
         let result = await connquery(`DELETE FROM categories WHERE id = ${conn.escape(req.params.id)}`)
         if (result.affectedRows === 0) {
             return res.status(404).send({ message: 'product id not found' })
         }
-        // Manual
+        // >>> Manual
         // let deleteId = [parseInt(req.params.id)];
         // while (deleteId) {
         //     await connquery(`DELETE FROM categories WHERE id IN (${conn.escape(deleteId)})`)
@@ -138,7 +140,7 @@ app.get('/products', async (req, res) => {
     }
 })
 
-//get product by id and it's categories
+//get product by id
 app.get('/products/:id', async (req, res) => {
     try {
         let result = await connquery(`SELECT * FROM products WHERE id = ${conn.escape(req.params.id)}`)
@@ -155,12 +157,28 @@ app.get('/products/:id', async (req, res) => {
 })
 
 //get product by category
-app.get('/products/categories/:category', async (req, res) => {
+//http://localhost:2000/products/categories?category=laptop
+app.post('/products/categories', async (req, res) => {
     try {
+        let { category } = req.query
         const query = `select p.* from products p
                         join productcat pc on pc.productId = p.id
                         join categories c on pc.categoryId = c.id
-                        where category = ${conn.escape(req.params.category)}`
+                        where category = ${conn.escape(category)}`
+        let result = await connquery(query)
+        res.status(200).send(result)
+    } catch (error) {
+        res.status(500).send(error)
+    }
+})
+
+//get products that have not assigned to category
+app.get('/products/categories/uncategorized', async (req, res) => {
+    try {
+        console.log('ok')
+        const query = `select p.* from products p
+                        left join productcat pc on p.id = pc.productId
+                        where pc.id is null`
         let result = await connquery(query)
         res.status(200).send(result)
     } catch (error) {
@@ -224,12 +242,15 @@ app.delete('/products/:id', async (req, res) => {
 //get sub categories that have no child
 //on CATEGORIES SECTION ABOVE!
 
+//get products that have not assigned to category
+//on PRODUCTS SECTION ABOVE!
+
 //get product category
 app.get('/productcat', async (req, res) => {
     try {
-        const query = `SELECT pc.id, p.nama, c.category FROM productcat pc
-        join products p on p.id = pc.productId
-        join categories c on c.id = pc.categoryId`
+        const query = `SELECT pc.id, p.nama, p.id as productId, c.category FROM productcat pc
+                        join products p on p.id = pc.productId
+                        join categories c on c.id = pc.categoryId`
         let result = await connquery(query)
         res.status(200).send(result)
     } catch (error) {
