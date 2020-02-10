@@ -228,6 +228,8 @@ app.delete('/products/:id', async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).send({ message: 'product id not found' })
         }
+        // because of fk constraint restrict, product cannot deleted
+        // if there's no fk constraint then:
         // await connquery(`DELETE FROM productcat WHERE productId = ${conn.escape(req.params.id)}`)
         res.status(200).send({ message: 'deleted successfully' })
     } catch (error) {
