@@ -175,7 +175,6 @@ app.post('/products/categories', async (req, res) => {
 //get products that have not assigned to category
 app.get('/products/categories/uncategorized', async (req, res) => {
     try {
-        console.log('ok')
         const query = `select p.* from products p
                         left join productcat pc on p.id = pc.productId
                         where pc.id is null`
@@ -240,10 +239,10 @@ app.delete('/products/:id', async (req, res) => {
 //PRODUCT CATEGORIES----------------------------------------------------------------------------
 
 //get sub categories that have no child
-//on CATEGORIES SECTION ABOVE!
+//on CATEGORIES SECTION ABOVE! Line 45
 
 //get products that have not assigned to category
-//on PRODUCTS SECTION ABOVE!
+//on PRODUCTS SECTION ABOVE! Line 175
 
 //get product category
 app.get('/productcat', async (req, res) => {
